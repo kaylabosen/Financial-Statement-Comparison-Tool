@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Search, Plus, X, Building, Check, Layers } from 'lucide-react';
-import { CompanySummary } from '../types';
+import { CompanySummary, CompanyEnriched } from '../types';
 
 interface CompanySelectorProps {
   selectedTickers: string[];
   availableCompanies: CompanySummary[];
+  companiesData?: CompanyEnriched[];
   onAddTicker: (ticker: string) => void;
   onRemoveTicker: (ticker: string) => void;
   onPresetSelect: (tickers: string[]) => void;
@@ -13,6 +14,7 @@ interface CompanySelectorProps {
 export const CompanySelector: React.FC<CompanySelectorProps> = ({
   selectedTickers,
   availableCompanies,
+  companiesData = [],
   onAddTicker,
   onRemoveTicker,
   onPresetSelect
@@ -76,6 +78,8 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 my-4">
         {selectedTickers.map(ticker => {
           const comp = availableCompanies.find(c => c.ticker === ticker);
+          const enriched = companiesData.find(c => c.ticker === ticker);
+          const fhQuote = enriched?.finnhub?.quote;
           return (
             <div
               key={ticker}
@@ -99,14 +103,24 @@ export const CompanySelector: React.FC<CompanySelectorProps> = ({
                 </span>
               </div>
 
-              <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {comp?.industry || 'Public Corporation'}
+              <div className="flex items-center justify-between text-xs my-1.5 pt-1">
+                <span className="text-gray-500 dark:text-gray-400">Finnhub Quote:</span>
+                <div className="flex items-center gap-1 font-mono">
+                  <span className="font-bold text-gray-900 dark:text-gray-100">
+                    ${enriched?.currentPrice?.toFixed(2) || comp?.currentPrice?.toFixed(2) || '—'}
+                  </span>
+                  {fhQuote && (
+                    <span className={`text-[10px] font-semibold ${fhQuote.percentChange >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                      {fhQuote.percentChange >= 0 ? '+' : ''}{fhQuote.percentChange.toFixed(2)}%
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200/60 dark:border-gray-800 text-xs">
+              <div className="flex items-center justify-between mt-1 pt-1.5 border-t border-gray-200/60 dark:border-gray-800 text-xs">
                 <span className="text-gray-400">Market Cap:</span>
                 <span className="font-semibold text-gray-700 dark:text-gray-200">
-                  {comp ? formatMarketCap(comp.marketCap) : 'N/A'}
+                  {enriched?.marketCap ? formatMarketCap(enriched.marketCap) : comp ? formatMarketCap(comp.marketCap) : 'N/A'}
                 </span>
               </div>
             </div>

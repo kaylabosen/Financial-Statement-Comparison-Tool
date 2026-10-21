@@ -126,6 +126,7 @@ export function App() {
         <CompanySelector
           selectedTickers={selectedTickers}
           availableCompanies={availableCompanies}
+          companiesData={companiesData}
           onAddTicker={handleAddTicker}
           onRemoveTicker={handleRemoveTicker}
           onPresetSelect={handlePresetSelect}

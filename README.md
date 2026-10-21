@@ -11,7 +11,7 @@
 The **Financial Statement Comparison Tool** is an institutional-grade financial analytics platform developed to empower investors, analysts, and students to quickly benchmark and compare publicly traded companies side-by-side. Rather than manually sifting through hundreds of pages in individual SEC Form 10-K annual filings, this tool automates statement ingestion, computes standardized financial ratios across reporting periods, and synthesizes analytical narratives explaining differences in profitability, liquidity, and leverage.
 
 ### Main Functionality
-- **Multi-Company Benchmark Panel**: Compare between **2 to 5 public companies** simultaneously (preloaded sample: **Microsoft (MSFT)** vs. **Apple (AAPL)**, with instant additions such as NVDA, GOOGL, AMZN, META, TSLA, and JPM).
+- **Multi-Company Benchmark Panel**: Compare between **2 to 5 public companies** simultaneously (preloaded sample: **Microsoft (MSFT)** vs. **Apple (AAPL)**, with instant additions such as NVDA, GOOGL, AMZN, META, TSLA, and JPM), integrating **Finnhub real-time market prices, day's change, and exchange metadata**.
 - **Financial Summary KPI Cards**: Instant comparison of core balance sheet and income statement line items (Revenue, Operating Income, Net Income, Total Assets, Total Liabilities, and Shareholders' Equity) featuring prior-period baselines and color-coded Year-over-Year (YoY) percentage changes (**Green** for improvement, **Red** for decline, and **Gray** for neutral).
 - **Interactive Financial Visualizations**:
   - *5-Year Revenue Trend Chart*: Multi-line comparative trajectory with tooltips, legend toggling, and individual company line filters.
@@ -31,6 +31,7 @@ The **Financial Statement Comparison Tool** is an institutional-grade financial 
 - **Node.js** (v18.0.0 or higher) and **npm**
 - **Python** (v3.10 to v3.14) and **pip**
 - Modern Web Browser (Chrome, Edge, Firefox, Safari)
+- *(Optional)* Free **Finnhub API Key** from [finnhub.io](https://finnhub.io/) (the app includes a built-in sandbox demo key with graceful caching if no key is provided).
 
 ### Step 1: Clone the Repository
 ```bash
@@ -45,9 +46,17 @@ cd Financial-Statement-Comparison-Tool
    ```
 2. Install the required Python packages:
    ```bash
-   pip install fastapi uvicorn requests httpx pydantic
+   pip install fastapi uvicorn requests httpx pydantic finnhub-python
    ```
-3. Start the FastAPI server:
+3. *(Optional)* Set your Finnhub API Key:
+   ```bash
+   # Windows PowerShell
+   $env:FINNHUB_API_KEY="your_api_key_here"
+
+   # macOS / Linux
+   export FINNHUB_API_KEY="your_api_key_here"
+   ```
+4. Start the FastAPI server:
    ```bash
    python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload
    ```
@@ -75,20 +84,32 @@ cd Financial-Statement-Comparison-Tool
 
 ---
 
-## 3. Data Sources & SEC EDGAR API Documentation
+## 3. Data Sources & API Documentation (SEC EDGAR & Finnhub)
 
-### SEC EDGAR Facts API Integration
-The application retrieves raw XBRL company disclosures directly from the **U.S. Securities and Exchange Commission (SEC) EDGAR API**:
+The application pairs deep multi-year regulatory filings from the **SEC EDGAR API** with real-time equity market data from the **Finnhub Stock API**.
+
+### A. SEC EDGAR Facts API Integration (Fundamental Financial Statements)
+- **Primary Source**: U.S. Securities and Exchange Commission (SEC) EDGAR XBRL Data API.
 - **Endpoint Structure**: `https://data.sec.gov/api/xbrl/companyfacts/CIK{CIK_10_DIGITS}.json`
-- **SEC Compliance**: In accordance with official SEC EDGAR Fair Access rules, requests transmit a declared `User-Agent` header (`FinancialStatementComparisonApp research@fincomparisontool.org`) adhering to the 10 request-per-second fair access policy.
-- **CIK Resolution**: Company tickers are resolved to 10-digit Central Index Keys (e.g., `MSFT` $\rightarrow$ `0000789019`, `AAPL` $\rightarrow$ `0000320193`, `GOOGL` $\rightarrow$ `0001652044`, `NVDA` $\rightarrow$ `0001045810`).
+- **SEC Fair-Access Compliance**: Adheres to SEC automated access policies by broadcasting an identified corporate `User-Agent` header (`FinancialStatementComparisonApp research@fincomparisontool.org`), capping requests below the 10 request-per-second rate limit.
+- **CIK Resolution**: Automatically resolves public equity ticker symbols to their registered 10-digit SEC Central Index Key (e.g., `MSFT` $\rightarrow$ `0000789019`, `AAPL` $\rightarrow$ `0000320193`, `GOOGL` $\rightarrow$ `0001652044`, `NVDA` $\rightarrow$ `0001045810`).
+- **Standardized Line Items Extracted**: Ingests 5 consecutive fiscal years (2020 – 2024) of audited Form 10-K filings:
+  - *Income Statement*: Revenues, Operating Income (EBIT), Net Income.
+  - *Balance Sheet*: Total Assets, Current Assets, Inventory, Total Liabilities, Current Liabilities, Stockholders' Equity.
+  - *Cash Flow*: Operating Cash Flow and Capital Expenditures (deriving Free Cash Flow).
+  - *Fail-Safe Benchmark Data*: High-fidelity cached datasets ensure instant responsiveness and offline operability even if the SEC endpoint is temporarily unreachable.
 
-### Statement Datasets
-The application ingests standardized Form 10-K audited annual statements spanning 5 consecutive fiscal years (2020 – 2024):
-- **Income Statement Concepts**: `Revenues` / `RevenueFromContractWithCustomerExcludingAssessedTax`, `OperatingIncomeLoss`, `NetIncomeLoss`.
-- **Balance Sheet Concepts**: `Assets`, `AssetsCurrent`, `InventoryNet`, `Liabilities`, `LiabilitiesCurrent`, `StockholdersEquity`.
-- **Cash Flow Statement Concepts**: `NetCashProvidedByUsedInOperatingActivities`, `PaymentsToAcquirePropertyPlantAndEquipment` (deriving **Free Cash Flow**).
-- **Curated High-Fidelity Dataset**: To ensure zero network latency, immediate offline review, and resilience against external SEC rate limits, audited 10-K figures for major benchmark companies are also embedded in the internal data engine.
+### B. Finnhub Stock API Integration (Real-Time Market Data & Profiles)
+- **Primary Source**: [Finnhub.io](https://finnhub.io/) Financial Market Data APIs.
+- **Official Python SDK**: Utilizes the official `finnhub-python` client alongside asynchronous `httpx` for high-throughput queries.
+- **Endpoints Utilized**:
+  1. **Real-Time Quote Endpoint (`/quote`)**:
+     - *URL*: `https://finnhub.io/api/v1/quote?symbol={TICKER}&token={API_KEY}`
+     - *Payload Data*: Current price (`c`), dollar change (`d`), percentage change (`dp`), day high (`h`), day low (`l`), opening price (`o`), and previous close (`pc`).
+  2. **Company Profile 2 Endpoint (`/stock/profile2`)**:
+     - *URL*: `https://finnhub.io/api/v1/stock/profile2?symbol={TICKER}&token={API_KEY}`
+     - *Payload Data*: Primary exchange (e.g., NASDAQ, NYSE), market capitalization, share count outstanding, corporate logo URL, country of incorporation, currency, and Finnhub industry classification.
+- **Graceful Token Fallback**: If an explicit `FINNHUB_API_KEY` is not configured in the host environment, the backend automatically cascades to a demo sandbox key and cached real-time benchmark quotes, preventing application downtime.
 
 ---
 

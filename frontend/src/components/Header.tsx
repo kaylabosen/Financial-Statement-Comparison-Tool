@@ -46,9 +46,12 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                 SEC EDGAR
               </span>
+              <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                Finnhub API
+              </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Institutional Multi-Company Statement & Ratio Analytics
+              SEC 10-K Ratios & Finnhub Real-Time Market Quotes
             </p>
           </div>
         </div>

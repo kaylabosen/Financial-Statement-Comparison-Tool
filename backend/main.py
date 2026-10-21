@@ -1,7 +1,6 @@
 """
 Financial Statement Comparison Tool - FastAPI Backend Server
-Provides endpoints for company listings, financial statements, calculated ratios,
-comparative charts, AI financial differences, and CSV/Excel exports.
+Integrates SEC EDGAR Financial Statements with Finnhub Real-Time Market Data.
 """
 
 from fastapi import FastAPI, Query, HTTPException, Response
@@ -9,18 +8,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import io
 import csv
+import asyncio
 
 from sec_data import get_company_data, list_available_companies, fetch_sec_edgar_facts
 from financial_ratios import enrich_company_financials
 from ai_explainer import generate_financial_explanation
+from finnhub_service import fetch_finnhub_quote, fetch_finnhub_profile
 
 app = FastAPI(
     title="Financial Statement Comparison Tool API",
-    description="REST API for analyzing and comparing public company financial statements.",
-    version="1.0.0"
+    description="REST API for analyzing public company financial statements (SEC EDGAR) and real-time market data (Finnhub API).",
+    version="1.1.0"
 )
 
-# Enable CORS for frontend Vite dev server and production clients
+# Enable CORS for frontend Vite dev server and external clients
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -31,7 +32,12 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "app": "Financial Statement Comparison Tool", "version": "1.0.0"}
+    return {
+        "status": "ok",
+        "app": "Financial Statement Comparison Tool",
+        "version": "1.1.0",
+        "integrations": ["SEC EDGAR Facts API", "Finnhub Stock API"]
+    }
 
 @app.get("/api/companies")
 def get_companies(search: Optional[str] = None):
@@ -46,10 +52,10 @@ def get_companies(search: Optional[str] = None):
     return {"companies": companies}
 
 @app.get("/api/compare")
-def compare_companies(tickers: str = Query(..., description="Comma-separated tickers, e.g. MSFT,AAPL")):
+async def compare_companies(tickers: str = Query(..., description="Comma-separated tickers, e.g. MSFT,AAPL")):
     """
     Retrieves and enriches financial statements for 2 to 5 companies.
-    Computes key ratios, YoY trends, and CAGRs.
+    Computes key ratios, YoY trends, CAGRs, and integrates live Finnhub market quotes and profiles.
     """
     ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
     if len(ticker_list) < 1:
@@ -60,10 +66,33 @@ def compare_companies(tickers: str = Query(..., description="Comma-separated tic
     results = []
     missing = []
     
+    # Concurrent gathering of Finnhub data
+    quote_tasks = [fetch_finnhub_quote(t) for t in ticker_list]
+    profile_tasks = [fetch_finnhub_profile(t) for t in ticker_list]
+    quotes = await asyncio.gather(*quote_tasks)
+    profiles = await asyncio.gather(*profile_tasks)
+    
+    finnhub_data = {}
+    for i, t in enumerate(ticker_list):
+        finnhub_data[t] = {
+            "quote": quotes[i],
+            "profile": profiles[i]
+        }
+
     for ticker in ticker_list:
         raw_data = get_company_data(ticker)
         if raw_data:
             enriched = enrich_company_financials(raw_data)
+            # Attach live Finnhub market data
+            enriched["finnhub"] = finnhub_data.get(ticker, {})
+            # Update currentPrice and marketCap if Finnhub provides live values
+            fh_quote = finnhub_data.get(ticker, {}).get("quote", {})
+            fh_profile = finnhub_data.get(ticker, {}).get("profile", {})
+            if fh_quote.get("current"):
+                enriched["currentPrice"] = fh_quote["current"]
+            if fh_profile.get("marketCapitalization"):
+                enriched["marketCap"] = fh_profile["marketCapitalization"]
+                
             results.append(enriched)
         else:
             missing.append(ticker)
@@ -77,8 +106,21 @@ def compare_companies(tickers: str = Query(..., description="Comma-separated tic
     return {
         "compared": results,
         "missing": missing,
-        "count": len(results)
+        "count": len(results),
+        "dataSource": "SEC EDGAR Form 10-K & Finnhub.io Real-Time API"
     }
+
+@app.get("/api/finnhub/quote")
+async def get_finnhub_quote(ticker: str = Query(..., description="Stock ticker symbol")):
+    """Direct endpoint to fetch real-time stock quote from Finnhub."""
+    quote = await fetch_finnhub_quote(ticker)
+    return quote
+
+@app.get("/api/finnhub/profile")
+async def get_finnhub_profile(ticker: str = Query(..., description="Stock ticker symbol")):
+    """Direct endpoint to fetch company profile from Finnhub."""
+    profile = await fetch_finnhub_profile(ticker)
+    return profile
 
 @app.get("/api/explain-differences")
 def explain_differences(tickers: str = Query(..., description="Comma-separated tickers")):

@@ -43,6 +43,34 @@ export interface CAGRSummary {
   operatingIncomeCAGR: number;
 }
 
+export interface FinnhubQuote {
+  source?: string;
+  symbol: string;
+  current: number;
+  change: number;
+  percentChange: number;
+  high?: number;
+  low?: number;
+  open?: number;
+  prevClose?: number;
+  timestamp?: number;
+}
+
+export interface FinnhubProfile {
+  source?: string;
+  ticker: string;
+  name?: string;
+  country?: string;
+  currency?: string;
+  exchange?: string;
+  ipo?: string;
+  logo?: string;
+  finnhubIndustry?: string;
+  weburl?: string;
+  marketCapitalization?: number;
+  shareOutstanding?: number;
+}
+
 export interface CompanyEnriched {
   ticker: string;
   name: string;
@@ -57,6 +85,10 @@ export interface CompanyEnriched {
   latestFinancials: FinancialYearData;
   previousFinancials: FinancialYearData;
   cagrSummary: CAGRSummary;
+  finnhub?: {
+    quote?: FinnhubQuote;
+    profile?: FinnhubProfile;
+  };
 }
 
 export interface CompanySummary {
