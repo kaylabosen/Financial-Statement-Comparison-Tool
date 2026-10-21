@@ -159,7 +159,7 @@ While the application provides a robust comparative framework, several limitatio
 ### Screenshot 1: Financial Dashboard & Comparative KPI Overview
 *The primary dashboard showcasing the Company Selection Panel, KPI summary cards with YoY growth indicators, and the 5-year Revenue Trend chart.*
 
-![Financial Dashboard Overview](screenshots/Screenshot%202026-10-21%20140824.png)
+![Financial Dashboard Overview](Screenshot%202026-10-21%20140824.png)
 *(File: `Screenshot 2026-10-21 140824.png`)*
 
 ---
@@ -167,7 +167,7 @@ While the application provides a robust comparative framework, several limitatio
 ### Screenshot 2: Financial Ratio Benchmarks & AI "Explain Differences" Modal
 *Side-by-side grouped ratio charts (ROA, ROE, Current Ratio, Debt-to-Equity) and the AI Financial Differences analysis modal.*
 
-![Financial Ratio Benchmarks & AI Explainer](screenshots/Screenshot%202026-10-21%20140905.png)
+![Financial Ratio Benchmarks & AI Explainer](Screenshot%202026-10-21%20140905.png)
 *(File: `Screenshot 2026-10-21 140905.png`)*
 
 ---
