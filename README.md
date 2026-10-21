@@ -159,30 +159,16 @@ While the application provides a robust comparative framework, several limitatio
 ### Screenshot 1: Financial Dashboard & Comparative KPI Overview
 *The primary dashboard showcasing the Company Selection Panel, KPI summary cards with YoY growth indicators, and the 5-year Revenue Trend chart.*
 
-```
-+-----------------------------------------------------------------------------------+
-| [SCREENSHOT PLACEHOLDER 1: Insert screenshots/dashboard_overview.png here]        |
-|                                                                                   |
-| Recommended capture: Full view of the top navigation, company selector            |
-| (e.g. MSFT vs AAPL), KPI cards with YoY percentage badges, and revenue chart.     |
-+-----------------------------------------------------------------------------------+
-```
-*(Insert image file at `screenshots/dashboard_overview.png` and link: `![Dashboard Overview](screenshots/dashboard_overview.png)`)*
+![Financial Dashboard Overview](screenshots/Screenshot%202026-10-21%20140824.png)
+*(File: `Screenshot 2026-10-21 140824.png`)*
 
 ---
 
 ### Screenshot 2: Financial Ratio Benchmarks & AI "Explain Differences" Modal
 *Side-by-side grouped ratio charts (ROA, ROE, Current Ratio, Debt-to-Equity) and the AI Financial Differences analysis modal.*
 
-```
-+-----------------------------------------------------------------------------------+
-| [SCREENSHOT PLACEHOLDER 2: Insert screenshots/ratio_analysis_ai.png here]         |
-|                                                                                   |
-| Recommended capture: The Ratio Analysis Dashboard, Balance Sheet Structure chart, |
-| and the open "Explain Differences" modal displaying executive narrative insights. |
-+-----------------------------------------------------------------------------------+
-```
-*(Insert image file at `screenshots/ratio_analysis_ai.png` and link: `![Ratio Analysis & AI Explainer](screenshots/ratio_analysis_ai.png)`)*
+![Financial Ratio Benchmarks & AI Explainer](screenshots/Screenshot%202026-10-21%20140905.png)
+*(File: `Screenshot 2026-10-21 140905.png`)*
 
 ---
 
